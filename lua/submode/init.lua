@@ -44,12 +44,12 @@ local function restore_mapping(mode, key, saved_mappings)
 end
 
 -- exit submode and restore original mappings
-local function exit_submode(submode, new_keys, saved_mappings)
+local function exit_submode(submode, mappings, saved_mappings)
   current_submode = nil
   vim.notify("👋 " .. submode .. " submode OFF", vim.log.levels.INFO)
 
   -- restore original mappings
-  for _, mapping in ipairs(new_keys) do
+  for _, mapping in ipairs(mappings) do
     local key = mapping.key
     restore_mapping("n", key, saved_mappings)
   end
@@ -62,37 +62,37 @@ local function exit_submode(submode, new_keys, saved_mappings)
 end
 
 -- enter submode and set new mappings
-local function enter_submode(submode, new_keys)
+local function enter_submode(submode, mappings)
   vim.notify("🗝️ " .. submode .. " submode ON", vim.log.levels.INFO)
 
   -- save original mappings before setting new ones
   local saved_mappings = {}
-  for _, mapping in ipairs(new_keys) do
+  for _, mapping in ipairs(mappings) do
     local key = mapping.key
     save_mapping("n", key, saved_mappings)
   end
   save_mapping("n", "<Esc>", saved_mappings) -- save original mapping for <Esc> to exit the submode
 
   -- set new mappings for the submode
-  for _, mapping in ipairs(new_keys) do
+  for _, mapping in ipairs(mappings) do
     vim.keymap.set("n", mapping.key, mapping.rhs, { desc = mapping.desc })
   end
 
   -- Esc exits the submode
   vim.keymap.set("n", "<Esc>", function()
-    exit_submode(submode, new_keys, saved_mappings)
+    exit_submode(submode, mappings, saved_mappings)
   end, { desc = "Exit " .. submode .. " submode" })
 end
 
 local M = {}
 
-function M.toggle_submode(submode, enter_key, new_keys)
+function M.toggle_submode(submode, enter_key, mappings)
   vim.keymap.set("n", enter_key, function()
     if current_submode then
       vim.notify("🙅 " .. current_submode .. " submode is already active. Press <Esc> to exit.", vim.log.levels.INFO)
     else
       current_submode = submode
-      enter_submode(submode, new_keys)
+      enter_submode(submode, mappings)
     end
   end, { desc = "Toggle " .. submode .. " submode" })
 end
@@ -102,7 +102,7 @@ function M.setup(config)
   local submodes = config.submodes or {}
 
   for name, opts in pairs(submodes) do
-    M.toggle_submode(name, opts.enter_key, opts.keys)
+    M.toggle_submode(name, opts.enter_key, opts.mappings)
   end
 end
 
