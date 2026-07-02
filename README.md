@@ -35,6 +35,8 @@
 
 ## 🍳 Usage Examples
 
+`./EXAMPLE` lists a few practical submode configurations.
+
 ### With lazy.nvim
 
 Add the plugin to your lazy.nvim spec:
