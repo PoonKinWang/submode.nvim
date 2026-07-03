@@ -44,22 +44,19 @@ Add the plugin to your lazy.nvim spec:
 ```lua
 return {
   "PoonKinWang/submode.nvim",
-  config = function()
-    require("submode").setup({
-      submodes = {
-        ["window adjust"] = {
-          enter_key = "<C-w><C-w>",
-          mappings = {
-            
-            { rhs = "<C-w>+", key = "+", desc = "Increase window height" },
-            { rhs = "<C-w>-", key = "-", desc = "Decrease window height" },
-            { rhs = "<C-w><", key = "<", desc = "Decrease window width" },
-            { rhs = "<C-w>>", key = ">", desc = "Increase window width" },
-          },
+  opts = {
+    submodes = {
+      ["window adjust"] = {
+        enter_key = "<C-w><C-w>",
+        mappings = {
+          { rhs = "<C-w>+", key = "+", desc = "Increase window height" },
+          { rhs = "<C-w>-", key = "-", desc = "Decrease window height" },
+          { rhs = "<C-w><", key = "<", desc = "Decrease window width" },
+          { rhs = "<C-w>>", key = ">", desc = "Increase window width" },
         },
       },
-    })
-  end,
+    } 
+  }
 }
 ```
 
@@ -74,30 +71,28 @@ You can define several independent submodes. Here's another example for debuggin
 ```lua
 return {
   "PoonKinWang/submode.nvim",
-  config = function()
-    require("submode").setup({
-      submodes = {
-        ["window adjust"] = {
-          enter_key = "<C-w><C-w>",
-          mappings = {
-            { rhs = "<C-w>+", key = "+", desc = "Increase window height" },
-            { rhs = "<C-w>-", key = "-", desc = "Decrease window height" },
-            { rhs = "<C-w><", key = "<", desc = "Decrease window width" },
-            { rhs = "<C-w>>", key = ">", desc = "Increase window width" },
-          },
-        },
-        ["debug"] = {
-          enter_key = "<leader>d",
-          mappings = {
-            { key = "b", rhs = ":lua require'dap'.toggle_breakpoint()<CR>", desc = "Toggle breakpoint" },
-            { key = "c", rhs = ":lua require'dap'.continue()<CR>", desc = "Continue execution" },
-            { key = "o", rhs = ":lua require'dap'.step_over()<CR>", desc = "Step over" },
-            { key = "i", rhs = ":lua require'dap'.step_into()<CR>", desc = "Step into" },
-          },
+  opts = {
+    submodes = {
+      ["window adjust"] = {
+        enter_key = "<C-w><C-w>",
+        mappings = {
+          { rhs = "<C-w>+", key = "+", desc = "Increase window height" },
+          { rhs = "<C-w>-", key = "-", desc = "Decrease window height" },
+          { rhs = "<C-w><", key = "<", desc = "Decrease window width" },
+          { rhs = "<C-w>>", key = ">", desc = "Increase window width" },
         },
       },
-    })
-  end,
+      ["debug"] = {
+        enter_key = "<leader>d",
+        mappings = {
+          { key = "b", rhs = ":lua require'dap'.toggle_breakpoint()<CR>", desc = "Toggle breakpoint" },
+          { key = "c", rhs = ":lua require'dap'.continue()<CR>", desc = "Continue execution" },
+          { key = "o", rhs = ":lua require'dap'.step_over()<CR>", desc = "Step over" },
+          { key = "i", rhs = ":lua require'dap'.step_into()<CR>", desc = "Step into" },
+        },
+      },
+    },
+  }
 }
 ```
 
