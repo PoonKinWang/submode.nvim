@@ -1,3 +1,14 @@
+local function type_check(value, expected_type, name)
+	if type(value) ~= expected_type then
+		vim.notify(
+			"Expected " .. name .. " to be of type " .. expected_type .. " but got " .. type(value) .. ".",
+			vim.log.levels.ERROR
+		)
+		return false
+	end
+	return true
+end
+
 local function default_mode_settings(mappings)
 	local is_missing = false
 	local is_having = false
@@ -77,7 +88,7 @@ local function exit_submode(submode, mappings, saved_mappings)
 end
 
 -- enter submode and set new mappings
-local function enter_submode(submode, mappings)
+local function enter_submode(submode, exit_key, mappings)
 	vim.notify("🗝️ " .. submode .. " submode ON", vim.log.levels.INFO)
 
 	local saved_mappings = {}
@@ -90,23 +101,21 @@ local function enter_submode(submode, mappings)
 
 	-- Esc exits the submode
 	-- this implementation could be hijacked by other plugins or mappings
-	save_mapping("n", "<Esc>", saved_mappings) -- save original mapping for <Esc> to exit the submode
-	vim.keymap.set("n", "<Esc>", function()
+	save_mapping("n", exit_key, saved_mappings) -- save original mapping for exit_key to exit the submode
+	vim.keymap.set("n", exit_key, function()
 		exit_submode(submode, mappings, saved_mappings)
 	end, { desc = "Exit " .. submode .. " submode" })
 	-- this implementation can avoid being hijacked by other plugins or mappings, but it may cause issues with other plugins that use on_key
 	-- vim.on_key(function(key)
 	-- 	if current_submode == submode then
-	-- 		if key == vim.keycode("<Esc>") then
+	-- 		if key == vim.keycode(exit_key) then
 	-- 			exit_submode(submode, mappings, saved_mappings)
 	-- 		end
 	-- 	end
 	-- end)
 end
 
-local M = {}
-
-function M.toggle_submode(submode, enter_key, mappings)
+local function toggle_submode(name, enter_key, exit_key, mappings)
 	vim.keymap.set("n", enter_key, function()
 		if current_submode then
 			vim.notify(
@@ -114,19 +123,37 @@ function M.toggle_submode(submode, enter_key, mappings)
 				vim.log.levels.INFO
 			)
 		else
-			current_submode = submode
-			enter_submode(submode, mappings)
+			current_submode = name
+			enter_submode(name, exit_key, mappings)
 		end
-	end, { desc = "Toggle " .. submode .. " submode" })
+	end, { desc = "Toggle " .. name .. " submode" })
 end
 
-function M.setup(config)
-	config = config or {}
-	local submodes = config.submodes or {}
+local function submode_setup(submode, config)
+	config.exit_key = config.exit_key or "<Esc>" -- default exit key to <Esc> if not specified
+	config.name = config.name or submode -- default description if not specified
+	local setup_success = true
+	setup_success = setup_success and type_check(submode, "string", "submode")
+	setup_success = setup_success and type_check(config.name, "string", "name")
+	setup_success = setup_success and type_check(config.enter_key, "string", "enter_key")
+	setup_success = setup_success and type_check(config.exit_key, "string", "exit_key")
+	setup_success = setup_success and type_check(config.mappings, "table", "mappings")
+	if not setup_success then
+		vim.notify(
+			"Failed to setup submode: " .. config.name .. ". Please check the configuration.",
+			vim.log.levels.ERROR
+		)
+		return
+	end
+	default_mode_settings(config.mappings)
+	toggle_submode(config.name, config.enter_key, config.exit_key, config.mappings)
+end
 
-	for name, opts in pairs(submodes) do
-		default_mode_settings(opts.mappings)
-		M.toggle_submode(name, opts.enter_key, opts.mappings)
+local M = {}
+function M.setup(opt)
+	opt = opt or {}
+	for submode, config in pairs(opt) do
+		submode_setup(submode, config)
 	end
 end
 

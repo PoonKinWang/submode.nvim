@@ -26,11 +26,10 @@ local adjust_keys = {
 return {
 	"PoonKinWang/submode.nvim",
 	opts = {
-		submodes = {
-			["window adjust"] = {
-				enter_key = "<C-w><C-w>",
-				keys = adjust_keys,
-			},
+		window_ajust = {
+			name = "Window Adjust",
+			enter_key = "<C-w><C-w>",
+			mappings = adjust_keys,
 		},
 	},
 }

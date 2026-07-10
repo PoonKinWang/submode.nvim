@@ -29,7 +29,7 @@
 
 ## ✨ Features
 
-1. **Temporary keybinding isolation** – Enter a submode, remap given keys, exit automatically with `<Esc>`.
+1. **Temporary keybinding isolation** – Enter a submode, remap given keys, exit automatically with exit key.
 2. **Lightweight** – Pure Lua, zero overhead.
 3. **Fully configurable** – Define any number of submodes with arbitrary key‑action pairs.
 
@@ -45,15 +45,15 @@ Add the plugin to your lazy.nvim spec:
 return {
   "PoonKinWang/submode.nvim",
   opts = {
-    submodes = {
-      ["window adjust"] = {
-        enter_key = "<C-w><C-w>",
-        mappings = {
-          { rhs = "<C-w>+", key = "+", desc = "Increase window height" },
-          { rhs = "<C-w>-", key = "-", desc = "Decrease window height" },
-          { rhs = "<C-w><", key = "<", desc = "Decrease window width" },
-          { rhs = "<C-w>>", key = ">", desc = "Increase window width" },
-        },
+     window_adjust = {
+      name = "Window Adjust",
+      enter_key = "<C-w><C-w>",
+      exit_key = "<Esc>",
+      mappings = {
+        { rhs = "<C-w>+", key = "+", desc = "Increase window height" },
+        { rhs = "<C-w>-", key = "-", desc = "Decrease window height" },
+        { rhs = "<C-w><", key = "<", desc = "Decrease window width" },
+        { rhs = "<C-w>>", key = ">", desc = "Increase window width" },
       },
     } 
   }
@@ -72,24 +72,26 @@ You can define several independent submodes. Here's another example for debuggin
 return {
   "PoonKinWang/submode.nvim",
   opts = {
-    submodes = {
-      ["window adjust"] = {
-        enter_key = "<C-w><C-w>",
-        mappings = {
-          { rhs = "<C-w>+", key = "+", desc = "Increase window height" },
-          { rhs = "<C-w>-", key = "-", desc = "Decrease window height" },
-          { rhs = "<C-w><", key = "<", desc = "Decrease window width" },
-          { rhs = "<C-w>>", key = ">", desc = "Increase window width" },
-        },
+    window_adjust = {
+      name = "Window Adjust",
+      enter_key = "<C-w><C-w>",
+      exit_key = "<Esc>",
+      mappings = {
+        { rhs = "<C-w>+", key = "+", desc = "Increase window height" },
+        { rhs = "<C-w>-", key = "-", desc = "Decrease window height" },
+        { rhs = "<C-w><", key = "<", desc = "Decrease window width" },
+        { rhs = "<C-w>>", key = ">", desc = "Increase window width" },
       },
-      ["debug"] = {
-        enter_key = "<leader>d",
-        mappings = {
-          { key = "b", rhs = ":lua require'dap'.toggle_breakpoint()<CR>", desc = "Toggle breakpoint" },
-          { key = "c", rhs = ":lua require'dap'.continue()<CR>", desc = "Continue execution" },
-          { key = "o", rhs = ":lua require'dap'.step_over()<CR>", desc = "Step over" },
-          { key = "i", rhs = ":lua require'dap'.step_into()<CR>", desc = "Step into" },
-        },
+    },
+    debugging = {
+      name = "Debugging",
+      enter_key = "<leader>d",
+      exit_key = "<Esc>",
+      mappings = {
+        { key = "b", rhs = ":lua require'dap'.toggle_breakpoint()<CR>", desc = "Toggle breakpoint" },
+        { key = "c", rhs = ":lua require'dap'.continue()<CR>", desc = "Continue execution" },
+        { key = "o", rhs = ":lua require'dap'.step_over()<CR>", desc = "Step over" },
+        { key = "i", rhs = ":lua require'dap'.step_into()<CR>", desc = "Step into" },
       },
     },
   }
@@ -102,27 +104,30 @@ The `setup` function accepts a single table with the following fields:
 
 ```lua
 {
-  submodes = {
-    ["submode_name"] = {
-      enter_key = "<key>", -- Key sequence to enter the submode
-        mappings = {
-          { key = "...", rhs = "...", desc = "..." },
-          -- more entries...
-      },
+  submode_1 = {
+    name = "submode_name",
+    enter_key = "<key>", -- Key sequence to enter the submode
+    exit_key = "<key>",  -- Key sequence to exit the submode
+      mappings = {
+        { key = "...", rhs = "...", desc = "..." },
+        -- more entries...
     },
-    -- more submodes...
   },
+  submode_2 = {
+    ...
+  -- more submodes...
 }
 ```
 
-### `submodes`
+### `submode`
 
-A dictionary where each key is the name of a submode (used for notifications).  
-Each value must contain:
+Each submode must contain:
 
 | Field | Type | Description |
 |-------|------|-------------|
+| `name` | `string` | The name of the submode (used for notifications) |
 | `enter_key` | `string` | Normal‑mode keymap that triggers the submode (e.g. `"<leader>w"`) |
+| `exit_key` | `string` | Normal‑mode keymap that exits the submode (e.g. `"<Esc>"`) |
 | `mappings` | `table` | List of key‑action definitions |
 
 ### Submode entry structure
@@ -131,6 +136,7 @@ Each entry in `mappings` is a table:
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
+| mode | `string` | ❌ | The mode for the mapping (default: `"n"` for normal mode) |
 | `key` | `string` | ✅ | The key to map (e.g. `"h"`, `"j"`) |
 | `rhs` | `string` | ✅ | The action (e.g. `"<C-w>h"`, `":bd<CR>"`) |
 | `desc` | `string` | ❌ | Description shown in `WhichKey` or `vim.keymap` |
@@ -143,11 +149,7 @@ All mappings are created in **normal mode** (`"n"`).
 
 Yes. The `desc` field in each key entry will be picked up by WhichKey if you have it installed.
 
-> Does it support operator‑pending or visual modes?
-
-Currently only normal mode is supported. Extending to other modes is planned.
-
-> What happens if I press `<Esc>` inside a submode?
+> What happens if I press exit key (e.g. `<Esc>`) inside a submode?
 
 The submode exits immediately, all overridden keys are restored, and the normal `<Esc>` behaviour resumes.
 

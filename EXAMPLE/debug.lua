@@ -158,11 +158,10 @@ local debug_keys = {
 return {
 	"PoonKinWang/submode.nvim",
 	opts = {
-		submodes = {
-			["debug"] = {
-				enter_key = "<leader>dd",
-				mappings = debug_keys,
-			},
+		debug = {
+			name = "Debug",
+			enter_key = "<leader>dd",
+			mappings = debug_keys,
 		},
 	},
 }
