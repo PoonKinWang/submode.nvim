@@ -1,3 +1,19 @@
+local function default_mode_settings(mappings)
+	local is_missing = false
+	local is_having = false
+	for _, mapping in ipairs(mappings) do
+		if not mapping.mode then
+			mapping.mode = "n" -- default to normal mode if not specified
+			is_missing = true
+		else
+			is_having = true
+		end
+	end
+	if is_missing and is_having then
+		vim.notify("Some mappings are missing 'mode' field. Defaulting to 'n' (normal mode).", vim.log.levels.WARN)
+	end
+end
+
 -- flag to indicate whether we are in submode
 local current_submode = nil
 
@@ -50,8 +66,7 @@ local function exit_submode(submode, mappings, saved_mappings)
 
 	-- restore original mappings
 	for _, mapping in ipairs(mappings) do
-		local key = mapping.key
-		restore_mapping("n", key, saved_mappings)
+		restore_mapping(mapping.mode, mapping.key, saved_mappings)
 	end
 	restore_mapping("n", "<Esc>", saved_mappings)
 
@@ -65,21 +80,17 @@ end
 local function enter_submode(submode, mappings)
 	vim.notify("🗝️ " .. submode .. " submode ON", vim.log.levels.INFO)
 
-	-- save original mappings before setting new ones
 	local saved_mappings = {}
 	for _, mapping in ipairs(mappings) do
-		local key = mapping.key
-		save_mapping("n", key, saved_mappings)
-	end
-	-- save_mapping("n", "<Esc>", saved_mappings) -- save original mapping for <Esc> to exit the submode
-
-	-- set new mappings for the submode
-	for _, mapping in ipairs(mappings) do
-		vim.keymap.set("n", mapping.key, mapping.rhs, { desc = mapping.desc })
+		-- save original mappings before setting new ones
+		save_mapping(mapping.mode, mapping.key, saved_mappings)
+		-- set new mappings for the submode
+		vim.keymap.set(mapping.mode, mapping.key, mapping.rhs, { desc = mapping.desc })
 	end
 
 	-- Esc exits the submode
 	-- the previous implementation is commented out below since it could be hijacked by other plugins or mappings
+	-- save_mapping("n", "<Esc>", saved_mappings) -- save original mapping for <Esc> to exit the submode
 	-- vim.keymap.set("n", "<Esc>", function()
 	--   exit_submode(submode, mappings, saved_mappings)
 	-- end, { desc = "Exit " .. submode .. " submode" })
@@ -113,6 +124,7 @@ function M.setup(config)
 	local submodes = config.submodes or {}
 
 	for name, opts in pairs(submodes) do
+		default_mode_settings(opts.mappings)
 		M.toggle_submode(name, opts.enter_key, opts.mappings)
 	end
 end
