@@ -89,18 +89,19 @@ local function enter_submode(submode, mappings)
 	end
 
 	-- Esc exits the submode
-	-- the previous implementation is commented out below since it could be hijacked by other plugins or mappings
-	-- save_mapping("n", "<Esc>", saved_mappings) -- save original mapping for <Esc> to exit the submode
-	-- vim.keymap.set("n", "<Esc>", function()
-	--   exit_submode(submode, mappings, saved_mappings)
-	-- end, { desc = "Exit " .. submode .. " submode" })
-	vim.on_key(function(key)
-		if current_submode == submode then
-			if key == vim.keycode("<Esc>") then
-				exit_submode(submode, mappings, saved_mappings)
-			end
-		end
-	end)
+	-- this implementation could be hijacked by other plugins or mappings
+	save_mapping("n", "<Esc>", saved_mappings) -- save original mapping for <Esc> to exit the submode
+	vim.keymap.set("n", "<Esc>", function()
+		exit_submode(submode, mappings, saved_mappings)
+	end, { desc = "Exit " .. submode .. " submode" })
+	-- this implementation can avoid being hijacked by other plugins or mappings, but it may cause issues with other plugins that use on_key
+	-- vim.on_key(function(key)
+	-- 	if current_submode == submode then
+	-- 		if key == vim.keycode("<Esc>") then
+	-- 			exit_submode(submode, mappings, saved_mappings)
+	-- 		end
+	-- 	end
+	-- end)
 end
 
 local M = {}
